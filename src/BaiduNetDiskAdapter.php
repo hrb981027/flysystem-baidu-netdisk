@@ -13,7 +13,6 @@ use Hrb981027\BaiduNetdisk\Param\Client\GetListAll\Data as GetListAllData;
 use Hrb981027\BaiduNetdisk\Param\Client\Manger\Data as MangerData;
 use Hrb981027\BaiduNetdisk\Param\Client\OneUpload\Data as OneUploadData;
 use Hrb981027\BaiduNetdisk\Param\Client\Search\Data as SearchData;
-use Hyperf\Guzzle\ClientFactory;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
@@ -23,13 +22,15 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
 {
     protected GuzzleHttpClient $guzzleHttpClient;
     protected string $accessToken;
+    protected string $root;
     protected Client $client;
 
-    public function __construct(ClientFactory $clientFactory, string $accessToken)
+    public function __construct(array $config = [])
     {
-        $this->guzzleHttpClient = $clientFactory->create();
-        $this->accessToken = $accessToken;
-        $this->client = new Client($clientFactory, $accessToken);
+        $this->guzzleHttpClient = new GuzzleHttpClient();
+        $this->accessToken = $config['access_token'];
+        $this->root = isset($config['root']) ? $config['root'] . '/' : '/';
+        $this->client = new Client($this->accessToken);
     }
 
     /**
@@ -37,7 +38,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function fileExists(string $path): bool
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $pathInfo = pathinfo($path);
 
@@ -62,7 +63,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function writeStream(string $path, $contents, Config $config): void
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $tmpFile = '/tmp/' . generateUUID();
 
@@ -102,7 +103,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function readStream(string $path)
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $pathInfo = pathinfo($path);
 
@@ -128,7 +129,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
 
         $this->guzzleHttpClient->get($dlink . '&access_token=' . $this->accessToken, [
             'headers' => [
-                'User-Agent' => 'maikeos.com'
+                'User-Agent' => 'pan.baidu.com'
             ],
             'sink' => $savePath
         ]);
@@ -141,7 +142,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function delete(string $path): void
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $this->client->manager('delete', new MangerData([
             'file_list' => [
@@ -163,7 +164,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function createDirectory(string $path, Config $config): void
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $this->client->oneUpload(new OneUploadData([
             'path' => $path,
@@ -192,7 +193,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function lastModified(string $path): FileAttributes
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $pathInfo = pathinfo($path);
 
@@ -209,7 +210,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function fileSize(string $path): FileAttributes
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $pathInfo = pathinfo($path);
 
@@ -226,7 +227,7 @@ class BaiduNetDiskAdapter implements FilesystemAdapter
      */
     public function listContents(string $path, bool $deep): iterable
     {
-        $path = '/' . $path;
+        $path = $this->root . $path;
 
         $list = $this->client->getListAll(new GetListAllData([
             'path' => $path,
