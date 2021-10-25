@@ -6,10 +6,10 @@ namespace Hrb981027\FlysystemBaiduNetdisk;
 
 use Hyperf\Filesystem\Contract\AdapterFactoryInterface;
 
-class BaiduNetDiskAdapterFactory implements AdapterFactoryInterface
+class BaiduNetdiskAdapterFactory implements AdapterFactoryInterface
 {
     public function make(array $options)
     {
-        return new BaiduNetDiskAdapter($options);
+        return new BaiduNetdiskAdapter($options);
     }
 }

@@ -18,7 +18,7 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 
-class BaiduNetDiskAdapter implements FilesystemAdapter
+class BaiduNetdiskAdapter implements FilesystemAdapter
 {
     protected GuzzleHttpClient $guzzleHttpClient;
     protected string $accessToken;
