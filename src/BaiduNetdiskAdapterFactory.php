@@ -10,6 +10,8 @@ class BaiduNetdiskAdapterFactory implements AdapterFactoryInterface
 {
     public function make(array $options)
     {
-        return new BaiduNetdiskAdapter($options);
+        return make(BaiduNetdiskAdapter::class, [
+            'config' => $options
+        ]);
     }
 }

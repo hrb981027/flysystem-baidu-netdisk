@@ -13,6 +13,7 @@ use Hrb981027\BaiduNetdisk\Param\Client\GetListAll\Data as GetListAllData;
 use Hrb981027\BaiduNetdisk\Param\Client\Manger\Data as MangerData;
 use Hrb981027\BaiduNetdisk\Param\Client\OneUpload\Data as OneUploadData;
 use Hrb981027\BaiduNetdisk\Param\Client\Search\Data as SearchData;
+use Hyperf\Guzzle\ClientFactory;
 use League\Flysystem\Config;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
@@ -25,12 +26,14 @@ class BaiduNetdiskAdapter implements FilesystemAdapter
     protected string $root;
     protected Client $client;
 
-    public function __construct(array $config = [])
+    public function __construct(ClientFactory $clientFactory, array $config = [])
     {
-        $this->guzzleHttpClient = new GuzzleHttpClient();
+        $this->guzzleHttpClient = $clientFactory->create();
         $this->accessToken = $config['access_token'];
         $this->root = isset($config['root']) ? $config['root'] . '/' : '/';
-        $this->client = new Client($this->accessToken);
+        $this->client = make(Client::class, [
+            'accessToken' => $this->accessToken
+        ]);
     }
 
     /**
