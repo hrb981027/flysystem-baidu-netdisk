@@ -8,7 +8,6 @@ use GuzzleHttp\Client as GuzzleHttpClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Hrb981027\BaiduNetdisk\Client;
 use Hrb981027\BaiduNetdisk\Exception\InvalidClientException;
-use Hrb981027\BaiduNetdisk\Param\Client\FileMetas\Data as FileMetasData;
 use Hrb981027\BaiduNetdisk\Param\Client\GetListAll\Data as GetListAllData;
 use Hrb981027\BaiduNetdisk\Param\Client\Manger\Data as MangerData;
 use Hrb981027\BaiduNetdisk\Param\Client\OneUpload\Data as OneUploadData;
@@ -22,17 +21,15 @@ use League\Flysystem\FilesystemAdapter;
 class BaiduNetdiskAdapter implements FilesystemAdapter
 {
     protected GuzzleHttpClient $guzzleHttpClient;
-    protected string $accessToken;
     protected string $root;
     protected Client $client;
 
     public function __construct(ClientFactory $clientFactory, array $config = [])
     {
         $this->guzzleHttpClient = $clientFactory->create();
-        $this->accessToken = $config['access_token'];
         $this->root = isset($config['root']) ? $config['root'] . '/' : '/';
         $this->client = make(Client::class, [
-            'accessToken' => $this->accessToken
+            'accessToken' => $config['access_token']
         ]);
     }
 
@@ -108,29 +105,15 @@ class BaiduNetdiskAdapter implements FilesystemAdapter
     {
         $path = $this->root . $path;
 
-        $pathInfo = pathinfo($path);
+        $dlink = $this->client->getDownloadUrl($path);
 
-        $result = $this->client->search(new SearchData([
-            'key' => $pathInfo['basename'],
-            'dir' => $pathInfo['dirname']
-        ]));
-
-        if (!isset($result['list'][0])) {
+        if (empty($dlink)) {
             return;
         }
 
-        $id = $result['list'][0]['fs_id'];
-
-        $info = $this->client->fileMetas(new FileMetasData([
-            'fsids' => [$id],
-            'dlink' => true
-        ]));
-
-        $dlink = $info['list'][0]['dlink'];
-
         $savePath = '/tmp/' . generateUUID();
 
-        $this->guzzleHttpClient->get($dlink . '&access_token=' . $this->accessToken, [
+        $this->guzzleHttpClient->get($dlink, [
             'headers' => [
                 'User-Agent' => 'pan.baidu.com'
             ],
